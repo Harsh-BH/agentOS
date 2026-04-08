@@ -1,0 +1,33 @@
+import {
+  Header,
+  Hero,
+  TechStack,
+  ClickClickDone,
+  TrustedBy,
+  BuildWithSpeed,
+  ScaleWithConfidence,
+  ShipTogether,
+  Testimonial,
+  CTASection,
+  Footer,
+} from "@/components/landing";
+
+export default function HomePage() {
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <main className="flex-1">
+        <Hero />
+        <TechStack />
+        <ClickClickDone />
+        <TrustedBy />
+        <BuildWithSpeed />
+        <ScaleWithConfidence />
+        <ShipTogether />
+        <Testimonial />
+        <CTASection />
+      </main>
+      <Footer />
+    </div>
+  );
+}

@@ -1,0 +1,11 @@
+export { Header } from "./Header";
+export { Hero } from "./Hero";
+export { TechStack } from "./TechStack";
+export { ClickClickDone } from "./ClickClickDone";
+export { TrustedBy } from "./TrustedBy";
+export { BuildWithSpeed } from "./BuildWithSpeed";
+export { ScaleWithConfidence } from "./ScaleWithConfidence";
+export { ShipTogether } from "./ShipTogether";
+export { Testimonial } from "./Testimonial";
+export { CTASection } from "./CTASection";
+export { Footer } from "./Footer";
