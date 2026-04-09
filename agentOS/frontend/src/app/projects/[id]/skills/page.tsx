@@ -34,10 +34,10 @@ export default function ProjectSkillsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="border-b border-[#e2e2e2] px-8 py-5">
-          <div className="h-3 w-24 animate-pulse bg-[#f0e6ff]" />
-          <div className="mt-3 h-6 w-40 animate-pulse bg-[#e2e2e2]" />
+      <div className="flex h-full flex-col bg-[#fafafa]">
+        <div className="border-b border-[#e2e2e2] bg-white px-8 py-4">
+          <div className="h-3 w-32 animate-pulse bg-[#f0e6ff]" />
+          <div className="mt-3 h-5 w-44 animate-pulse bg-[#e2e2e2]" />
         </div>
         <div className="px-8 py-4">
           {[1, 2, 3].map((i) => (
@@ -55,16 +55,24 @@ export default function ProjectSkillsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex h-full flex-col bg-[#fafafa]">
       {/* Header */}
-      <div className="border-b border-[#e2e2e2] px-8 py-5">
-        <Link href={`/projects/${id}`} className="text-xs font-medium text-[#9d66ff] hover:underline">&larr; Back to project</Link>
+      <div className="border-b border-[#e2e2e2] bg-white px-8 py-4">
+        <div className="flex items-center gap-1.5 text-xs text-[#999]">
+          <Link href="/dashboard" className="hover:text-[#9d66ff]">Projects</Link>
+          <span>/</span>
+          <Link href={`/projects/${id}`} className="hover:text-[#9d66ff]">Project</Link>
+          <span>/</span>
+          <span className="font-medium text-[#0d0d0d]">Skills</span>
+        </div>
         <div className="mt-2 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#0d0d0d]">Skills ({skills.length})</h1>
-            <p className="mt-1 text-sm text-[#4d4d4d]">Reusable operators for this project. Click to expand config.</p>
+            <h1 className="text-xl font-bold tracking-tight text-[#0d0d0d]">
+              Skills <span className="ml-1 text-base font-normal text-[#999]">({skills.length})</span>
+            </h1>
+            <p className="mt-0.5 text-xs text-[#777]">Reusable operators — click to expand config.</p>
           </div>
-          <button onClick={() => setShowAdd(true)} className="bg-[#0d0d0d] px-4 py-2 text-sm font-medium text-white hover:bg-[#333]">+ Add Skill</button>
+          <button onClick={() => setShowAdd(true)} className="bg-[#0d0d0d] px-3 py-2 text-xs font-medium text-white hover:bg-[#333]">+ Add Skill</button>
         </div>
       </div>
 
@@ -104,7 +112,7 @@ export default function ProjectSkillsPage() {
       </div>
 
       {/* Skills list */}
-      <div className="px-8 py-4">
+      <div className="flex-1 overflow-y-auto px-8 py-4">
         {skills.length === 0 ? (
           <div className="flex flex-col items-center py-20 text-center">
             <div className="flex size-12 items-center justify-center bg-[#f0e6ff]">

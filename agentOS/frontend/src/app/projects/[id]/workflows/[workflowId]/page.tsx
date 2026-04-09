@@ -69,22 +69,22 @@ export default function WorkflowEditorPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen flex-col bg-white">
-        <div className="flex items-center gap-4 border-b border-[#e2e2e2] px-6 py-3">
-          <div className="h-3 w-12 animate-pulse bg-[#f0e6ff]" />
-          <div className="h-4 w-px bg-[#e2e2e2]" />
-          <div className="h-4 w-32 animate-pulse bg-[#e2e2e2]" />
+      <div className="flex h-full flex-col bg-white">
+        <div className="flex items-center gap-3 border-b border-[#e2e2e2] px-6 py-3">
+          <div className="h-2.5 w-24 animate-pulse bg-[#f0e6ff]" />
+          <div className="h-3 w-px bg-[#e2e2e2]" />
+          <div className="h-3 w-32 animate-pulse bg-[#e2e2e2]" />
         </div>
-        <div className="flex flex-1 items-center justify-center text-sm text-[#999]">Loading workflow...</div>
+        <div className="flex flex-1 items-center justify-center text-sm text-[#999]">Loading workflow…</div>
       </div>
     );
   }
 
   if (error && !workflow) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4">
+      <div className="flex h-full flex-col items-center justify-center gap-4">
         <p className="text-sm text-red-600">{error}</p>
-        <Link href={`/projects/${projectId}`} className="text-sm font-medium text-[#9d66ff] hover:underline">Back to project</Link>
+        <Link href={`/projects/${projectId}`} className="text-sm font-medium text-[#9d66ff] hover:underline">← Back to project</Link>
       </div>
     );
   }
@@ -97,21 +97,25 @@ export default function WorkflowEditorPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="flex h-full flex-col bg-white">
       {/* Top bar */}
       <div className="flex items-center justify-between border-b border-[#e2e2e2] px-6 py-3">
-        <div className="flex items-center gap-4">
-          <Link href={`/projects/${projectId}`} className="text-xs font-medium text-[#9d66ff] hover:underline">
-            &larr; Back
-          </Link>
-          <div className="h-4 w-px bg-[#e2e2e2]" />
-          <div>
-            <h1 className="text-sm font-bold text-[#0d0d0d]">{workflow?.name ?? "Workflow"}</h1>
-            <div className="flex items-center gap-3 text-[10px] text-[#999]">
-              <span>v{workflow?.version ?? 1}</span>
-              <span>{nodes.length} nodes</span>
-              <span>{edges.length} edges</span>
-            </div>
+        <div className="flex items-center gap-3">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-1.5 text-xs text-[#999]">
+            <Link href="/dashboard" className="hover:text-[#9d66ff]">Projects</Link>
+            <span>/</span>
+            <Link href={`/projects/${projectId}`} className="hover:text-[#9d66ff]">Project</Link>
+            <span>/</span>
+            <span className="font-semibold text-[#0d0d0d]">{workflow?.name ?? "Workflow"}</span>
+          </div>
+          <div className="h-3.5 w-px bg-[#e2e2e2]" />
+          <div className="flex items-center gap-2 text-[10px] text-[#bbb]">
+            <span>v{workflow?.version ?? 1}</span>
+            <span>·</span>
+            <span>{nodes.length} nodes</span>
+            <span>·</span>
+            <span>{edges.length} edges</span>
           </div>
         </div>
 
