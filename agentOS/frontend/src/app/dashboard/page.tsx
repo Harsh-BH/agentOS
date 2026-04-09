@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useProjects } from "@/hooks/useProjects";
@@ -17,6 +17,28 @@ export default function DashboardPage() {
   const [repoURL, setRepoURL] = useState("");
   const [creating, setCreating] = useState(false);
   const [importStatus, setImportStatus] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    if (!showCreate) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closeModal();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [showCreate]);
+
+  // Auto-cancel inline delete confirm after 3s
+  useEffect(() => {
+    if (deleteConfirm) {
+      deleteTimerRef.current = setTimeout(() => setDeleteConfirm(null), 3000);
+    }
+    return () => {
+      if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
+    };
+  }, [deleteConfirm]);
 
   async function handleCreateBlank(e: React.FormEvent) {
     e.preventDefault();
@@ -35,18 +57,15 @@ export default function DashboardPage() {
     e.preventDefault();
     setCreating(true);
     try {
-      // Step 1: Create project
       setImportStatus("Creating project...");
       const name = newName || repoURL.split("/").pop() || "Imported Project";
       const project = await createProject({ name, description: newDesc || `Imported from ${repoURL}` });
 
-      // Step 2: Extract repo context (stages 1-5 pipeline)
       setImportStatus("Extracting context: fetching, filtering, skeletons, PageRank...");
       await post(`api/projects/${project.id}/import`, { repo_url: repoURL });
 
       setImportStatus("Context extracted! Redirecting...");
       closeModal();
-      // Redirect to project page where user can generate CLAUDE.md or Skills & Workflows
       router.push(`/projects/${project.id}`);
     } catch (err: unknown) {
       const msg = err && typeof err === "object" && "message" in err ? (err as { message: string }).message : "Import failed";
@@ -65,8 +84,12 @@ export default function DashboardPage() {
     setCreating(false);
   }
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete project "${name}"? This will also delete all its skills and workflows.`)) return;
+  async function handleDelete(id: string) {
+    if (deleteConfirm !== id) {
+      setDeleteConfirm(id);
+      return;
+    }
+    setDeleteConfirm(null);
     await deleteProject(id);
   }
 
@@ -112,7 +135,17 @@ export default function DashboardPage() {
         {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-sm text-[#999]">Loading projects...</div>
+          <div className="flex flex-col gap-3 py-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4 border-b border-[#e2e2e2] py-4 animate-pulse">
+                <div className="size-10 bg-[#f0e6ff]" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="h-3 w-40 bg-[#e2e2e2]" />
+                  <div className="h-2 w-24 bg-[#f5f5f5]" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : projects.length === 0 ? (
           <EmptyState onCreateClick={() => setShowCreate(true)} />
         ) : (
@@ -124,13 +157,13 @@ export default function DashboardPage() {
               <span className="w-20" />
             </div>
             {projects.map((project) => (
-              <div key={project.id} className="group flex items-center border-b border-[#e2e2e2] py-4">
-                <Link href={`/projects/${project.id}`} className="flex flex-1 items-center gap-4 transition-colors hover:opacity-80">
+              <div key={project.id} className="group flex items-center border-b border-[#e2e2e2] py-4 transition-colors hover:bg-[#fafafa]">
+                <Link href={`/projects/${project.id}`} className="flex flex-1 items-center gap-4">
                   <div className="flex size-10 items-center justify-center bg-[#f0e6ff]">
                     <span className="text-sm font-bold text-[#9d66ff]">{project.name.charAt(0).toUpperCase()}</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-[#0d0d0d] group-hover:text-[#7b3aed]">{project.name}</p>
+                    <p className="truncate text-sm font-semibold text-[#0d0d0d] transition-colors group-hover:text-[#7b3aed]">{project.name}</p>
                     {project.description && <p className="mt-0.5 truncate text-xs text-[#999]">{project.description}</p>}
                   </div>
                 </Link>
@@ -144,8 +177,30 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <span className="w-28 text-right text-xs text-[#999]">{timeAgo(project.updated_at)}</span>
-                <div className="flex w-20 justify-end gap-2">
-                  <button onClick={() => handleDelete(project.id, project.name)} className="px-2 py-1 text-xs text-[#999] hover:text-red-600">Delete</button>
+                <div className="flex w-20 items-center justify-end gap-1">
+                  {deleteConfirm === project.id ? (
+                    <>
+                      <button
+                        onClick={() => handleDelete(project.id)}
+                        className="bg-red-600 px-2 py-1 text-[10px] font-medium text-white hover:bg-red-700"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(null)}
+                        className="px-2 py-1 text-[10px] text-[#999] hover:text-[#0d0d0d]"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => handleDelete(project.id)}
+                      className="px-2 py-1 text-xs text-[#999] opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-600"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -155,7 +210,10 @@ export default function DashboardPage() {
 
       {/* Create / Import modal */}
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+        >
           <div className="w-full max-w-lg border border-[#e2e2e2] bg-white shadow-2xl">
             {/* Tabs */}
             <div className="flex border-b border-[#e2e2e2]">
@@ -240,7 +298,10 @@ function ModalFooter({ onCancel, loading, label }: { onCancel: () => void; loadi
   return (
     <div className="flex justify-end gap-3 border-t border-[#e2e2e2] px-6 py-4">
       <button type="button" onClick={onCancel} className="border border-[#e2e2e2] px-5 py-2 text-sm text-[#4d4d4d] hover:bg-[#f5f5f5]">Cancel</button>
-      <button type="submit" disabled={loading} className="bg-[#0d0d0d] px-5 py-2 text-sm font-medium text-white hover:bg-[#333] disabled:opacity-50">{loading ? "Working..." : label}</button>
+      <button type="submit" disabled={loading} className="flex items-center gap-2 bg-[#0d0d0d] px-5 py-2 text-sm font-medium text-white hover:bg-[#333] disabled:opacity-50">
+        {loading && <Spinner />}
+        {loading ? "Working..." : label}
+      </button>
     </div>
   );
 }
@@ -265,4 +326,13 @@ function PlusIcon() {
 
 function GHIcon() {
   return <svg width="12" height="12" viewBox="0 0 24 24" fill="#7b3aed"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" /></svg>;
+}
+
+function Spinner() {
+  return (
+    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" />
+    </svg>
+  );
 }
